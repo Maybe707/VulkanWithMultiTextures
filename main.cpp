@@ -10,16 +10,20 @@
 #include <optional>
 #include <set>
 
-#include <vulkan/vulkan.h>
-#include <X11/Xlib.h>
-#include "vulkan/vulkan_xlib.h"
-#include "vulkan/vulkan_core.h"
-#include "WindowXvK.hpp"
+#define VK_USE_PLATFORM_WIN32_KHR
+#include "../../../Vulkan-Headers/include/vulkan/vulkan.h"
+#include "../../../Vulkan-Headers/include/vulkan/vulkan_core.h"
+//#include "vulkan/vulkan.h"
+//#include <X11/Xlib.h>
+//#include "vulkan/vulkan_xlib.h"
+//#include "vulkan/vulkan_core.h"
+//#include "WindowXvK.hpp"
+#include "WindowWin.hpp"
 #include "VertexMath.hpp"
 #include "witch.h"
 #include "chelik.h"
 
-#define VK_USE_PLATFORM_XLIB_KHR
+//#define VK_USE_PLATFORM_XLIB_KHR
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -283,11 +287,13 @@ private:
     // VkDeviceSize textureSize_;
     // unsigned char* textureData_;
     
-    GLVM::Core::CWindowX Window;
+//    GLVM::Core::CWindowX Window;
+    GLVM::Core::CWindowWin Window;
 
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
-    VkXlibSurfaceCreateInfoKHR createXlibSurfaceInfo;
+//    VkXlibSurfaceCreateInfoKHR createXlibSurfaceInfo;
+    VkWin32SurfaceCreateInfoKHR createWin32SurfaceInfo;
     VkSurfaceKHR surface;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -345,12 +351,19 @@ private:
     bool framebufferResized = false;
 
     void initWindow() {
-        createXlibSurfaceInfo.dpy = Window.GetDisplay();
-        createXlibSurfaceInfo.window = Window.GetWindow();
+        // createXlibSurfaceInfo.dpy = Window.GetDisplay();
+        // createXlibSurfaceInfo.window = Window.GetWindow();
 
-        createXlibSurfaceInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-        createXlibSurfaceInfo.pNext = nullptr;
-        createXlibSurfaceInfo.flags = 0;
+        // createXlibSurfaceInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+        // createXlibSurfaceInfo.pNext = nullptr;
+        // createXlibSurfaceInfo.flags = 0;
+
+        createWin32SurfaceInfo.hwnd = Window.GetModernWindowHWND();
+        
+        createWin32SurfaceInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+        createWin32SurfaceInfo.pNext = nullptr;
+        createWin32SurfaceInfo.flags = 0;
+        
         ///< glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
     }
 
@@ -513,7 +526,7 @@ private:
     }
 
     void createSurface() {
-        if (vkCreateXlibSurfaceKHR(instance, &createXlibSurfaceInfo, nullptr, &surface) != VK_SUCCESS) {
+        if (vkCreateWin32SurfaceKHR(instance, &createWin32SurfaceInfo, nullptr, &surface) != VK_SUCCESS) {
             throw std::runtime_error("failed to create window surface!");
         }
     }
