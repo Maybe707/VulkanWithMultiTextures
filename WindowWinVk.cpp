@@ -1,4 +1,4 @@
-#include "WindowWin.hpp"
+#include "WindowWinVk.hpp"
 #include <iostream>
 #include <iterator>
 
@@ -11,8 +11,6 @@ namespace GLVM::Core
 {    
     CWindowWin::CWindowWin()
     {
-
-
         ///< Create classic window
         pClassic_Window_ = CreateWindowA( "STATIC", "", WS_POPUP | WS_DISABLED, 0, 0, 1, 1, NULL, NULL, GetModuleHandle( NULL ), NULL );
         pClassic_DC_ = GetDC( pClassic_Window_ );
@@ -104,7 +102,7 @@ namespace GLVM::Core
 
     void CWindowWin::SwapBuffers()
     {
-        ::SwapBuffers(pModern_DC_);
+//        ::SwapBuffers(pModern_DC_);
     }
 
     void CWindowWin::ClearDisplay()

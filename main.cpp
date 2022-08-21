@@ -10,20 +10,26 @@
 #include <optional>
 #include <set>
 
-#define VK_USE_PLATFORM_WIN32_KHR
-#include "../../../Vulkan-Headers/include/vulkan/vulkan.h"
-#include "../../../Vulkan-Headers/include/vulkan/vulkan_core.h"
-//#include "vulkan/vulkan.h"
-//#include <X11/Xlib.h>
-//#include "vulkan/vulkan_xlib.h"
-//#include "vulkan/vulkan_core.h"
-//#include "WindowXvK.hpp"
-#include "WindowWin.hpp"
 #include "VertexMath.hpp"
 #include "witch.h"
 #include "chelik.h"
 
+#define VK_USE_PLATFORM_WIN32_KHR
 //#define VK_USE_PLATFORM_XLIB_KHR
+
+#ifdef VK_USE_PLATFORM_XLIB_KHR
+#include "vulkan/vulkan.h"
+#include <X11/Xlib.h>
+#include "vulkan/vulkan_xlib.h"
+#include "vulkan/vulkan_core.h"
+#include "WindowXvK.hpp"
+#endif
+
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+#include "../../../Vulkan-Headers/include/vulkan/vulkan.h"
+#include "../../../Vulkan-Headers/include/vulkan/vulkan_core.h"
+#include "WindowWinVk.hpp"
+#endif
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -122,18 +128,6 @@ struct UniformBufferObject {
     alignas(16) mat4 proj;
 };
 
-// const std::vector<Vertex> vertices = {
-//     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-//     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-//     {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-//     {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-
-//     {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-//     {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-//     {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-//     {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
-// };
-
 const std::vector<Vertex> vertices = {
     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
@@ -168,11 +162,6 @@ const std::vector<Vertex> vertices = {
 
 // Выдай в шейдере output = vec4(uv.xy, 0,1) чтобы было наглядно.
 
-// const std::vector<uint16_t> indices = {
-//     0, 1, 2, 2, 3, 0,
-//     4, 5, 6, 6, 7, 4
-// };
-
 const std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0,
     4, 5, 6, 6, 7, 4,
@@ -182,17 +171,9 @@ const std::vector<uint16_t> indices = {
     20, 21, 22, 22, 23, 20
 };
 
-// const std::vector<uint16_t> indices = {
-//     0, 1, 2, 2, 3, 0,
-//     4, 7, 3, 3, 0, 4
-// };
-
 class HelloTriangleApplication {
 public:
     HelloTriangleApplication(std::vector<Texture> _texture_data) {
-        // textureSize_ = _textureSize;
-        // textureData_ = _textureData;
-
         texture_data_ = _texture_data;
 
         textureImages.resize(texture_data_.size());
@@ -263,9 +244,6 @@ public:
     }
     
     void setTextureData(std::vector<Texture> _texture_data) {
-        // textureSize_ = _textureSize;
-        // textureData_ = _textureData;
-
         texture_data_ = _texture_data;
 
         textureImages.resize(texture_data_.size());
@@ -284,16 +262,26 @@ public:
     
 private:
     std::vector<Texture> texture_data_;
-    // VkDeviceSize textureSize_;
-    // unsigned char* textureData_;
+
+#ifdef VK_USE_PLATFORM_XLIB_KHR
+    GLVM::Core::CWindowX Window;
+#endif
     
-//    GLVM::Core::CWindowX Window;
+#ifdef VK_USE_PLATFORM_WIN32_KHR
     GLVM::Core::CWindowWin Window;
+#endif
 
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
-//    VkXlibSurfaceCreateInfoKHR createXlibSurfaceInfo;
+
+#ifdef VK_USE_PLATFORM_XLIB_KHR
+    VkXlibSurfaceCreateInfoKHR createXlibSurfaceInfo;
+#endif
+    
+#ifdef VK_USE_PLATFORM_WIN32_KHR
     VkWin32SurfaceCreateInfoKHR createWin32SurfaceInfo;
+#endif
+    
     VkSurfaceKHR surface;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -351,18 +339,22 @@ private:
     bool framebufferResized = false;
 
     void initWindow() {
-        // createXlibSurfaceInfo.dpy = Window.GetDisplay();
-        // createXlibSurfaceInfo.window = Window.GetWindow();
+#ifdef VK_USE_PLATFORM_XLIB_KHR
+        createXlibSurfaceInfo.dpy = Window.GetDisplay();
+        createXlibSurfaceInfo.window = Window.GetWindow();
 
-        // createXlibSurfaceInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-        // createXlibSurfaceInfo.pNext = nullptr;
-        // createXlibSurfaceInfo.flags = 0;
+        createXlibSurfaceInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+        createXlibSurfaceInfo.pNext = nullptr;
+        createXlibSurfaceInfo.flags = 0;
+#endif
 
+#ifdef VK_USE_PLATFORM_WIN32_KHR
         createWin32SurfaceInfo.hwnd = Window.GetModernWindowHWND();
         
         createWin32SurfaceInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
         createWin32SurfaceInfo.pNext = nullptr;
         createWin32SurfaceInfo.flags = 0;
+#endif
         
         ///< glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
     }
@@ -526,9 +518,17 @@ private:
     }
 
     void createSurface() {
+#ifdef VK_USE_PLATFORM_XLIB_KHR
+        if (vkCreateXlibSurfaceKHR(instance, &createXlibSurfaceInfo, nullptr, &surface) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create window surface!");
+        }
+#endif
+
+#ifdef VK_USE_PLATFORM_WIN32_KHR
         if (vkCreateWin32SurfaceKHR(instance, &createWin32SurfaceInfo, nullptr, &surface) != VK_SUCCESS) {
             throw std::runtime_error("failed to create window surface!");
         }
+#endif
     }
 
     void pickPhysicalDevice() {
